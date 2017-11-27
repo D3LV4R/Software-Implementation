@@ -5,10 +5,11 @@ import javax.swing.JTextField;
 
 import ie.lyit.Hotel.Customer;
 import ie.lyit.serialize.CustomerSerializer;
+import ie.lyit.serialize.CustomerSerializerDao;
 
 public class CustomerSerializerTester {
 
-	private static CustomerSerializer customerSerializer = new CustomerSerializer();			//initialisation of the serializer of the customer
+	private static CustomerSerializerDao customerSerializer = new CustomerSerializer();			//initialisation of the serializer of the customer
 	
 	public static void main(String[] args) {
 		

@@ -15,8 +15,9 @@ import ie.lyit.Hotel.Customer;
 import ie.lyit.Hotel.Name;
 
 
-public class CustomerSerializer {
-	private ArrayList<Customer> customers;
+
+public class CustomerSerializer implements CustomerSerializerDao {
+	ArrayList<Customer> customers;
 	
 	final String FILENAME = "customers.ser";
 	

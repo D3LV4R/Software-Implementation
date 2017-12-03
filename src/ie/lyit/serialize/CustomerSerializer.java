@@ -6,7 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -18,6 +20,7 @@ import ie.lyit.Hotel.Name;
 
 public class CustomerSerializer implements CustomerSerializerDao {
 	ArrayList<Customer> customers;
+	List<CustomerSerializer.Memento> undoList;// = new ArrayList<CustomerSerializer.Memento>();
 	
 	final String FILENAME = "customers.ser";
 	
@@ -25,6 +28,43 @@ public class CustomerSerializer implements CustomerSerializerDao {
 		customers = new ArrayList<Customer>();			//List of all customers
 	}
 	
+	public List<CustomerSerializer.Memento> GetUndoListFromSave() {
+		if (undoList == null){
+			undoList = new ArrayList<CustomerSerializer.Memento>();
+		}
+		return undoList;
+	}
+														//Start of Memento Pattern 
+    public Memento saveToMemento() {
+        System.out.println("Originator: Saving to Memento.");
+        return new Memento(this.customers);
+    }
+ 
+    public void restoreFromMemento(Memento memento) {
+        this.customers = new ArrayList<Customer>();
+        for	(int i=0; i<memento.getSavedCustomers().size(); i++){
+    		customers.add(memento.getSavedCustomers().get(i));
+    	}
+        System.out.println("Originator: customers after restoring from Memento: " + customers);
+    }
+ 
+    public static class Memento implements Serializable {
+        private final ArrayList<Customer> customers;
+
+        public Memento(ArrayList<Customer> customersToSave) {
+        	customers = new ArrayList<Customer>();
+        	for	(int i=0; i<customersToSave.size(); i++){
+        		customers.add(customersToSave.get(i));
+        	}
+        }
+ 
+        // accessible by outer class only
+        private ArrayList<Customer> getSavedCustomers() {
+            return customers;
+        }
+    }													//End of Memento Pattern
+	
+    
 	public void add() {									//add customer to list
 		
 		Customer customer = new Customer();
@@ -120,6 +160,7 @@ public class CustomerSerializer implements CustomerSerializerDao {
 			ObjectOutputStream os = new ObjectOutputStream(fileStream);
 			
 			os.writeObject(customers);
+			os.writeObject(undoList);
 			
 			os.close();
 		}
@@ -136,6 +177,7 @@ public class CustomerSerializer implements CustomerSerializerDao {
 			FileInputStream fileStream = new FileInputStream(FILENAME);
 			ObjectInputStream is = new ObjectInputStream(fileStream);
 			customers = (ArrayList<Customer>)is.readObject();
+			undoList = (List<CustomerSerializer.Memento>)is.readObject();
 			is.close();
 		}
 		catch(FileNotFoundException fNFE) {

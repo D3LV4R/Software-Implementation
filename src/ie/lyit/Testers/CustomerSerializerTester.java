@@ -1,5 +1,8 @@
 package ie.lyit.Testers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -10,11 +13,13 @@ import ie.lyit.serialize.CustomerSerializerDao;
 public class CustomerSerializerTester {
 
 	private static CustomerSerializerDao customerSerializer = new CustomerSerializer();			//initialisation of the serializer of the customer
+	private static List<CustomerSerializer.Memento> undoList;
 	
 	public static void main(String[] args) {
 		
 		boolean programRuns = true;						//true until the program should end
 		customerSerializer.readRecordsFromFile();		//serializer open the .ser file
+		undoList = customerSerializer.GetUndoListFromSave();
 		
 		Customer.setNextNumber(customerSerializer.getHeighestNumber() + 1);			//number for the next customer who will be added
 						
@@ -24,7 +29,7 @@ public class CustomerSerializerTester {
 			number.requestFocus();
 			
 		    Object[] message = {
-		    	"1: add Customer | 2: view Customer | 3: edit Customer | 4: delete Customer | 5: list all Customers", number,
+		    	"1: add Customer | 2: view Customer | 3: edit Customer | 4: delete Customer | 5: list all Customers | 6: undo last change", number,
 		    };
 		
 		    int option = JOptionPane.showConfirmDialog(null, message, "What do you want to do?", JOptionPane.OK_CANCEL_OPTION);
@@ -39,6 +44,7 @@ public class CustomerSerializerTester {
 			    	case 3: editCustomer(); break;
 			    	case 4: deleteCustomer(); break;
 			    	case 5: listAllCustomers(); break;
+			    	case 6: undoLastChange(); break;
 			    	default: programRuns = false;
 		    	}
 		    	
@@ -48,13 +54,14 @@ public class CustomerSerializerTester {
 		    }
 
 		}
-
+		
 		customerSerializer.writeRecordsToFile();						//serializer saves file
 		System.out.println("Program finished");
 		
 	}
 	
 	private static void addCustomer(){
+		undoList.add(customerSerializer.saveToMemento());
 		customerSerializer.add();
 	}
 	
@@ -64,17 +71,31 @@ public class CustomerSerializerTester {
 	}
 	
 	private static void editCustomer(){
+		undoList.add(customerSerializer.saveToMemento());
 		int number = getNumberFromUser("edit:");
 		customerSerializer.editCustomer(number);
 	}
 	
 	private static void deleteCustomer(){
+		undoList.add(customerSerializer.saveToMemento());
 		int number = getNumberFromUser("delete:");
 		customerSerializer.deleteCustomer(number);
 	}
 	
 	private static void listAllCustomers(){
 		customerSerializer.list();
+	}
+	
+	private static void undoLastChange(){
+		int changeIndex = undoList.size() - 1;
+		if (changeIndex >= 0)
+		{
+			customerSerializer.restoreFromMemento(undoList.get(changeIndex));
+			undoList.remove(changeIndex);
+		}
+		else{
+			System.out.println("no saved changes");
+		}
 	}
 	
 	private static int getNumberFromUser(String purpose){
